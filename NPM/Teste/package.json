@@ -1,0 +1,15 @@
+{
+  "name": "chalk",
+  "version": "1.0.0",
+  "description": "teste",
+  "main": "appTeste.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "cleberson",
+  "type": "module",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.6.2"
+  }
+}
