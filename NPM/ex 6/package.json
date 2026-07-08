@@ -1,0 +1,19 @@
+{
+  "name": "ex-6",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "prompt-sync": "^4.2.0",
+    "sillyname": "^0.1.0",
+    "strip-ansi": "^5.2.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "type": "module",
+  "license": "ISC"
+}
