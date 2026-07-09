@@ -30,7 +30,8 @@ INSERT INTO jogos (titulo, genero, nota, lancamento) VALUES
     ('Red Dead Redemption 2', 'Acao',          9.7, 2018),
     ('Hades',                 'Roguelike',     9.3, 2020),
     ('Stardew Valley',        'Simulacao',     9.4, 2016);
-
-SELECT
+	
 SELECT COUNT(*) FROM alunos;
 SELECT AVG(nota) FROM alunos;
+SELECT nome, nota FROM alunos WHERE nota > 7;
+SELECT titulo FROM jogos;

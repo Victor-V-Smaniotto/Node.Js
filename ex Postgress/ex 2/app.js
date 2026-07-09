@@ -1,52 +1,38 @@
-import pg from "pg";
-import promptSync from "prompt-sync";
-
-const prompt = promptSync();
+import pg from 'pg';
+import promptSync from 'prompt-sync';
 
 const { Client } = pg;
+const prompt = promptSync();
 
 const client = new Client({
-    host: "localhost",
-    port: 5432,
-    user: "postgres",
-    password: "root",
-    database: "escola_db",
+    host:     'localhost',
+    port:     5432,
+    user:     'postgres',
+    password: 'root',
+    database: 'escola_db'
 });
 
-async function buscarJogos() {
-    try {
-        const genero = prompt("Digite o gênero do jogo: ");
+async function tudinho(){
 
+    try{
         await client.connect();
-
-        const jogos = await client.query(
-            `
-            SELECT titulo, nota
-            FROM jogos
-            WHERE genero ILIKE $1
-            ORDER BY nota DESC
-            `,
-            [genero]
-        );
-
-        if (jogos.rows.length === 0) {
-            console.log(
-                "Nenhum jogo encontrado para o gênero informado."
-            );
-            return;
-        }
-
-        console.log("\nJogos encontrados:\n");
-
-        jogos.rows.forEach(jogo => {
-            console.log(`${jogo.titulo} - Nota: ${jogo.nota}`);
+    
+        const mediaG = await client.query("SELECT AVG(nota) AS media FROM alunos;");
+        console.log(`Média geral da turma: ${Number(mediaG.rows[0].media).toFixed(2)}`);
+    
+        const alunosM = await client.query("SELECT nome, nota FROM alunos WHERE nota > 7;");
+        alunosM.rows.forEach(aluno => {
+            console.log(`Alunos: ${aluno.nome}  Nota: ${Number(aluno.nota)}`);
         });
+        console.log(`Tem ${alunosM.rows.length} alunos com nota acima de 7`);
 
-    } catch (erro) {
-        console.error("Erro:", erro.message);
+    } catch (err) {
+        console.error('Error:', err);
     } finally {
         await client.end();
     }
+    
+
 }
 
-buscarJogos();
+tudinho();
