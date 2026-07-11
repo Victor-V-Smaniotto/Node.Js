@@ -180,7 +180,7 @@ async function main(){
         let opcao;
 
         do {
-            console.log('\n============================');
+            console.log('\n=============================');
             console.log('====== Menu de Jogos =======');
             console.log('----------------------------');
             console.log('-- 1 - Ver todos os jogos --');

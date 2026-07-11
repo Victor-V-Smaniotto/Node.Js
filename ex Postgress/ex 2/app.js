@@ -31,8 +31,6 @@ async function tudinho(){
     } finally {
         await client.end();
     }
-    
-
 }
 
 tudinho();
