@@ -1,5 +1,6 @@
 import pg from "pg";
 import promptSync from "prompt-sync";
+import chalk from "chalk";
 
 const prompt = promptSync();
 const { Client } = pg;
@@ -16,38 +17,52 @@ async function listarJogos() {
     const resultado = await client.query(
         "SELECT * FROM jogos ORDER BY id ASC"
     );
+    console.log("\nLista de jogos:\n");
+    console.log(`${chalk.bold("Título".padEnd(25))} -- ${chalk.bold("Gênero".padEnd(15))} -- ${chalk.bold("Nota".padEnd(4))} -- ${chalk.bold("Ano")}`);
     resultado.rows.forEach(jogo => {
         console.log(
-            `${jogo.titulo} -- ${jogo.genero} -- Nota: ${jogo.nota} -- ${jogo.lancamento}`
+            `${chalk.green(jogo.titulo.padEnd(25))} -- ${chalk.yellow(jogo.genero.padEnd(15))} -- ${chalk.blue(jogo.nota.padEnd(4))} -- ${chalk.magenta(jogo.lancamento)}`
         );
     });
 }
 
+async function listarTop(){
+    const top = await client.query(
+        "SELECT * FROM jogos ORDER BY NOTA DESC LIMIT 3"
+    );
+    console.log(`${chalk.bold("\nTop 3 jogos:\n")}`);
+    let i = 0;
+    top.rows.forEach(jogo => {
+         i++;
+        console.log(
+            `${chalk.green(`${i}°: ${jogo.titulo.padEnd(25)}`)} -- ${chalk.yellow(jogo.genero.padEnd(15))} -- ${chalk.blue(jogo.nota.padEnd(4))} -- ${chalk.magenta(jogo.lancamento)}`
+        );
+    })
+}
+
 async function buscarJogos() {
  
-    const genero = prompt("\nDigite o gênero do jogo: ");
+    const genero = prompt("Digite o gênero do jogo: ");
 
     const jogos = await client.query(
         `
-        SELECT titulo, nota
-        FROM jogos
+        SELECT titulo, nota FROM jogos
         WHERE genero ILIKE $1
-        ORDER BY nota DESC
+        ORDER BY id ASC
         `,
         [genero]
     );
 
     if (jogos.rows.length === 0) {
-        console.log(
-            "Nenhum jogo encontrado para o gênero informado.\n"
-        );
+
+        console.log(`${chalk.red("Nenhum jogo encontrado para o gênero informado.\n")}`);
         return;
     }
 
-    console.log("\nJogos encontrados:\n");
-
+    console.log(`${chalk.bold("\nJogos encontrados:\n")}`);
+    console.log(`${chalk.bold("Título".padEnd(25))} -- ${chalk.bold("Nota".padEnd(4))}`);
     jogos.rows.forEach(jogo => {
-        console.log(`${jogo.titulo} - Nota: ${jogo.nota}`);
+        console.log(`${chalk.green(jogo.titulo.padEnd(25))} -- ${chalk.blue(jogo.nota.padEnd(4))}`);
     });
 }
 
@@ -58,17 +73,17 @@ async function cadastrarJogo() {
     const lancamento = Number(prompt("Ano de lançamento: "));
 
     if (titulo.trim() === "") {
-        console.log("Erro: título não pode estar vazio.");
+        console.log(`${chalk.red("Erro: título não pode estar vazio.")}`);
         return;
     }
 
     if (isNaN(nota) || nota < 0 || nota > 10) {
-        console.log("Erro: nota deve estar entre 0 e 10.");
+        console.log(`${chalk.red("Erro: nota deve estar entre 0 e 10.")}`);
         return;
     }
 
     if (isNaN(lancamento) || lancamento <= 1970) {
-        console.log("Erro: ano deve ser maior que 1970.");
+        console.log(`${chalk.red("Erro: ano deve ser maior que 1970.")}`);
         return;
     }
 
@@ -81,31 +96,35 @@ async function cadastrarJogo() {
         [titulo, genero, nota, lancamento]
     );
 
-    console.log("\nJogo cadastrado com sucesso:");
+    console.log(`${chalk.green("\nJogo cadastrado com sucesso:")}`);
     console.log(resultado.rows[0]);
 }
 
 async function reavaliarJogo() {
 
     const resultado = await client.query(
-        "SELECT * FROM jogos"
+        "SELECT * FROM jogos ORDER BY id ASC"
     );
 
+    console.log(`${chalk.bold("id".padEnd(2))} ${chalk.bold("Título".padEnd(25))} -- ${chalk.bold("Gênero".padEnd(15))} -- ${chalk.bold("Nota".padEnd(4))} -- ${chalk.bold("Ano")}`);
+   
     resultado.rows.forEach(jogo => {
         console.log(
-            `${jogo.id} - ${jogo.titulo} | ${jogo.genero} | Nota: ${jogo.nota} | ${jogo.lancamento}`
+        `${chalk.cyan((jogo.id.toString().padEnd(2)))} - ${chalk.green(jogo.titulo.padEnd(25))} | ${chalk.yellow(jogo.genero.padEnd(15))} | ${chalk.blue(jogo.nota.padEnd(4))} | ${chalk.magenta(jogo.lancamento)}`
         );
     });
 
-    const id = Number(prompt("\nInsira o ID do jogo para reavaliar: "));
-    if (isNaN(id) || id < 0 || id > resultado.rows.length) {
-        console.log("Erro: ID do jogo inválido.");
+    const id = Number(prompt("Insira o ID do jogo para reavaliar: "));
+    const jogos = resultado.rows.find(jogo => jogo.id === id);
+
+    if (isNaN(id) || !jogos) {
+        console.log(`${chalk.red("Erro: ID do jogo inválido.")}`);
         return;
     }
 
-    const nota = Number(prompt("\nNota (0 a 10): "));
+    const nota = Number(prompt("Nota (0 a 10): "));
     if (isNaN(nota) || nota < 0 || nota > 10) {
-        console.log("Erro: nota deve estar entre 0 e 10.");
+        console.log(`${chalk.red("Erro: nota deve estar entre 0 e 10.")}`);
         return;
     }
 
@@ -114,39 +133,43 @@ async function reavaliarJogo() {
         [nota, id]
     );
 
-    console.log("Nota atualizada com sucesso!");
+    console.log(`${chalk.green("Nota atualizada com sucesso!")}`);
     console.log(novaAvaliacao.rows[0]);
 }
 
-async function removerJogos() {
-
+async function removerJogos() { 
+    
     const resultado = await client.query(
-        "SELECT * FROM jogos"
+        "SELECT * FROM jogos ORDER BY id ASC"
     );
+
+    console.log(`${chalk.bold("id".padEnd(2))} ${chalk.bold("Título".padEnd(25))} -- ${chalk.bold("Gênero".padEnd(15))} -- ${chalk.bold("Nota".padEnd(4))} -- ${chalk.bold("Ano")}`);
 
     resultado.rows.forEach(jogo => {
         console.log(
-            `${jogo.id} - ${jogo.titulo} | ${jogo.genero} | Nota: ${jogo.nota} | ${jogo.lancamento}`
+            `${chalk.cyan(jogo.id.toString().padEnd(2))} - ${chalk.green(jogo.titulo.padEnd(25))} | ${chalk.yellow(jogo.genero.padEnd(15))} | ${chalk.blue(jogo.nota.padEnd(4))} | ${chalk.magenta(jogo.lancamento)}`
         );
     });
 
-    const id = Number(prompt("\nInsira o ID do jogo para remover: "));
-    if (isNaN(id) || id < 0 || id > resultado.rows.length) {
-        console.log("Erro: ID do jogo inválido.");
+    const id = Number(prompt("Insira o ID do jogo para remover: "));
+    const jogos = resultado.rows.find(jogo => jogo.id === id);
+
+    if (isNaN(id) || !jogos) {
+        console.log(`${chalk.red("Erro: ID do jogo inválido.")}`);
         return;
     }
 
-    const verificacao = Number(prompt("\nTem certeza que deseja remover o jogo? (1 - Sim / 2 - Não): "));
+    const verificacao = Number(prompt(`${chalk.yellow("Tem certeza que deseja remover o jogo? (1 - Sim / 2 - Não): ")}`));
 
     if (verificacao === 1) {
         const jogoRemovido = await client.query(
             "DELETE FROM jogos WHERE id = $1 RETURNING *",
             [id]
         );
-        console.log("Jogo removido com sucesso!");
+        console.log(`${chalk.green("Jogo removido com sucesso!")}`);
         console.log(jogoRemovido.rows[0]);
     } else {
-        console.log("Operação cancelada.");
+        console.log(`${chalk.yellow("Operação cancelada.")}`);
     }
 }
 
@@ -169,7 +192,18 @@ async function main(){
             console.log('-- 0 - Sair               --');
             console.log('===========================\n');
 
-            opcao = Number(prompt('Escolha uma opção: '));
+            const entrada = prompt('Escolha uma opção: ');
+
+            if(entrada.trim() === '') {
+                console.log(`${chalk.red('Digite um número')}`);
+                continue;
+            }
+            opcao = Number(entrada);
+
+            if(isNaN(opcao)) {
+                console.log(`${chalk.red('Digite apenas números.')}`);
+                continue;
+            }
             switch (opcao) {
                 case 1:
                     await listarJogos();
@@ -178,7 +212,7 @@ async function main(){
                     await buscarJogos();
                     break;
                 case 3:
-                    await listarTop3();
+                    await listarTop();
                     break;
                 case 4:
                     await cadastrarJogo();
@@ -190,19 +224,19 @@ async function main(){
                     await removerJogos();
                     break;
                 case 0:
-                    console.log('Saindo do programa...');
+                    console.log(`${chalk.bold('Saindo do programa...')}`);
                     break;
                 default:
-                    console.log('Opção inválida. Tente novamente.');
+                    console.log(`${chalk.red('Opção inválida. Tente novamente.')}`);
             }
         } while (opcao !== 0)
 
     } catch (erro) {
-        console.log('❌ Erro no sistema:', erro.message);
+        console.log(`${chalk.red('❌ Erro no sistema:')} ${erro.message}`);
 
     } finally {
         await client.end();
-        console.log('\n👋 Até logo!');
+        console.log(`${chalk.bold('👋 Até logo!')}`);
     }
 }
 
